@@ -6,9 +6,11 @@ using namespace std;
 #include "irsdk_defines.h"
 #include "irsdk_client.h"
 
-
 irsdkCVar g_SessionFlags("SessionFlags"); // (int) irsdk_Flags, bitfield
 vector<string> getColors(int flags);
+
+irsdkCVar g_CarIdxGear("CarIdxGear");
+
 
 tuple<string, int> getFlags(int flag) {
 	// wait up to 16 ms for start of session or new data
@@ -48,4 +50,22 @@ vector<string> getColors(int flags) {
 	if (flags & irsdk_repair) namedFlags.push_back("meatball");
 
 	return namedFlags;
+}
+
+int getGear() {
+	// TODO: Create a "game loop" where we only need to connect to the game once and then we send data every "frame"
+
+	// DriverInfo:
+	//     DriverCarIdx: 0
+	if (irsdkClient::instance().waitForData(16)) {
+		const int MAX_STR = 1024;
+		char tstr[MAX_STR];
+		if (1 == irsdkClient::instance().getSessionStrVal("DriverInfo:DriverCarIdx:", tstr, MAX_STR))
+		{
+			int driverCarIdx = atoi(tstr);
+			return g_CarIdxGear.getInt(driverCarIdx);
+		}
+
+	}
+	return 0;
 }

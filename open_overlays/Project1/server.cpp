@@ -49,20 +49,50 @@ int main(int argc, char* argv[])
 				// Accept the websocket handshake
 				ws.accept();
 				int flag = 0;
+				int gear = 0;
 
 				while (true)
 				{
 					try
 					{
+						vector<tuple<string, string>> dataArr;
 						int newFlag;
 						string colorFlag;
 						tuple<string, int> newFlagTuple = getFlags(flag);
 						tie(colorFlag, newFlag) = newFlagTuple;
 
 						if (flag != newFlag) {
-							ws.write(boost::asio::buffer(colorFlag));
+							dataArr.push_back({ "flag", colorFlag });
 							flag = newFlag;
 						}
+
+						int newGear = getGear();
+						if (newGear == gear) {
+							dataArr.push_back({ "gear", std::to_string(gear)});
+						}
+						gear = newGear;
+
+
+						// Build jsonStr
+						string jsonStr = "{ ";
+						for (int i = 0; i < dataArr.size(); i++) {
+							string key;
+							string val;
+							tie(key, val) = dataArr[i];
+							jsonStr += "\"";
+							jsonStr += key;
+							jsonStr += "\"";
+							jsonStr += ": ";
+							jsonStr += "\"";
+							jsonStr += val;
+							jsonStr += "\"";
+							jsonStr += ",";
+						}
+						jsonStr[jsonStr.size() - 1] = '}';
+						// std::cout << jsonStr << endl;
+
+						ws.write(boost::asio::buffer(jsonStr));
+
 					}
 
 
